@@ -4,9 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>GlanceChat — Modern Messenger</title>
-  <!-- Google Fonts & Simple Icons (Material Symbols) -->
+  <!-- Google Fonts & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0,1" />
+  <!-- Emoji Picker CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-mart@5.5.2/css/emoji-mart.css">
   <style>
     * {
       margin: 0;
@@ -157,7 +159,7 @@
 
     /* Sidebar modern */
     .sidebar-modern {
-      width: 300px;
+      width: 320px;
       background: rgba(0, 0, 0, 0.35);
       backdrop-filter: blur(8px);
       border-right: 1px solid rgba(255, 255, 255, 0.1);
@@ -183,12 +185,13 @@
     }
 
     .user-badge {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: #a0c4ff;
       margin-top: 6px;
       display: flex;
       align-items: center;
       gap: 6px;
+      word-break: break-all;
     }
 
     .users-list {
@@ -203,7 +206,7 @@
     .user-card {
       background: rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(2px);
-      padding: 14px 16px;
+      padding: 12px 14px;
       border-radius: 1.2rem;
       cursor: pointer;
       transition: all 0.2s;
@@ -227,7 +230,6 @@
       border-left: 3px solid #3b82f6;
     }
 
-    /* Unread green dot */
     .unread-dot {
       width: 10px;
       height: 10px;
@@ -247,14 +249,15 @@
     }
 
     .avatar-placeholder {
-      width: 38px;
-      height: 38px;
+      width: 42px;
+      height: 42px;
       background: linear-gradient(145deg, #3b82f6, #1e40af);
-      border-radius: 32px;
+      border-radius: 42px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: bold;
+      font-size: 1.1rem;
       text-transform: uppercase;
       color: white;
       flex-shrink: 0;
@@ -269,7 +272,7 @@
 
     .user-name {
       font-size: 0.95rem;
-      font-weight: 500;
+      font-weight: 600;
     }
 
     .last-msg-preview {
@@ -278,7 +281,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 150px;
+      max-width: 160px;
     }
 
     /* Chat section */
@@ -370,10 +373,11 @@
     .input-bar {
       background: rgba(0, 0, 0, 0.4);
       backdrop-filter: blur(12px);
-      padding: 16px 20px;
+      padding: 12px 20px;
       display: flex;
-      gap: 12px;
+      gap: 10px;
       border-top: 1px solid rgba(255,255,255,0.1);
+      position: relative;
     }
 
     .input-message {
@@ -381,7 +385,7 @@
       background: rgba(255,255,255,0.1);
       border: 1px solid rgba(255,255,255,0.2);
       border-radius: 2.5rem;
-      padding: 12px 20px;
+      padding: 12px 18px;
       color: white;
       font-size: 0.95rem;
       outline: none;
@@ -393,12 +397,12 @@
       border-color: #3b82f6;
     }
 
-    .send-btn {
+    .emoji-btn, .send-btn {
       background: #3b82f6;
       border: none;
-      width: 48px;
-      height: 48px;
-      border-radius: 40px;
+      width: 46px;
+      height: 46px;
+      border-radius: 46px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -407,9 +411,30 @@
       color: white;
     }
 
-    .send-btn:hover {
+    .emoji-btn {
+      background: rgba(255,255,255,0.15);
+    }
+
+    .emoji-btn:hover, .send-btn:hover {
       background: #2563eb;
       transform: scale(1.02);
+    }
+
+    /* Emoji Picker Container */
+    .emoji-picker-container {
+      position: absolute;
+      bottom: 70px;
+      left: 20px;
+      z-index: 100;
+      display: none;
+      background: rgba(0,0,0,0.9);
+      border-radius: 20px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .emoji-picker-container.show {
+      display: block;
     }
 
     /* scroll */
@@ -444,10 +469,58 @@
       font-weight: 400;
     }
 
+    /* Search Dialog */
+    .search-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+
+    .search-modal-content {
+      background: rgba(20, 30, 50, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 2rem;
+      padding: 2rem;
+      width: 90%;
+      max-width: 400px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .search-modal-content h3 {
+      color: white;
+      margin-bottom: 1rem;
+    }
+
+    .search-modal-content input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 1rem;
+      border: none;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      margin-bottom: 1rem;
+    }
+
+    .search-modal-content button {
+      padding: 10px 20px;
+      border-radius: 2rem;
+      border: none;
+      background: #3b82f6;
+      color: white;
+      cursor: pointer;
+    }
+
     @media (max-width: 700px) {
-      .sidebar-modern { width: 240px; }
+      .sidebar-modern { width: 260px; }
       .bubble { max-width: 85%; }
-      .last-msg-preview { max-width: 120px; }
     }
   </style>
 </head>
@@ -456,10 +529,15 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, collection, doc, getDocs, addDoc, query, orderBy, onSnapshot, updateDoc, setDoc, getDoc, deleteDoc, where, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, collection, doc, getDocs, addDoc, query, orderBy, onSnapshot, updateDoc, setDoc, getDoc, deleteDoc, where, limit, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    
+    // Load Emoji Mart dynamically
+    const emojiMartScript = document.createElement('script');
+    emojiMartScript.src = "https://cdn.jsdelivr.net/npm/emoji-mart@5.5.2/dist/index.js";
+    document.head.appendChild(emojiMartScript);
 
-    // 🔥 FIREBASE CONFIG (Replace with your actual config)
+    // Firebase Config (Replace with yours)
     const firebaseConfig = {
       apiKey: "AIzaSyBXKKQZTCJpurD9oVkdCvFElAgXwaL2hsc",
       authDomain: "chat-app-665ba.firebaseapp.com",
@@ -481,13 +559,15 @@
     // State
     let currentUserEmail = null;
     let currentUserId = null;
+    let currentUserName = null;
     let selectedUserEmail = null;
     let selectedUserName = null;
-    let chatsData = []; // { email, name, lastMessage, lastTimestamp, unreadCount }
+    let chatsData = [];
     let typingTimeout = null;
     let unsubscribeMessages = null;
     let unsubscribeTyping = null;
-    let chatListeners = new Map(); // track per-chat unread listeners
+    let unsubscribeRoomsListener = null;
+    let emojiPicker = null;
     
     const root = document.getElementById('root');
     
@@ -496,7 +576,8 @@
         <div class="auth-container">
           <div class="glass-auth">
             <h2>✨ GlanceChat</h2>
-            <div class="welcome-sub">Ultra-smooth • Glassmorphic • Real-time</div>
+            <div class="welcome-sub">Find friends by username • Send emojis • Real-time</div>
+            <div class="input-group"><input type="text" id="authUsername" class="glass-input" placeholder="Username (e.g., john_doe)"></div>
             <div class="input-group"><input type="email" id="authEmail" class="glass-input" placeholder="Email address" autocomplete="email"></div>
             <div class="input-group"><input type="password" id="authPassword" class="glass-input" placeholder="Password" autocomplete="current-password"></div>
             <div class="btn-group">
@@ -512,19 +593,42 @@
     }
     
     async function handleAuth(type) {
-      if (!firebaseReady) { showAuthMsg("⚠️ Firebase config missing — add your own keys in code."); return; }
+      if (!firebaseReady) { showAuthMsg("⚠️ Firebase config missing"); return; }
+      const username = document.getElementById('authUsername')?.value.trim();
       const email = document.getElementById('authEmail').value.trim();
       const pwd = document.getElementById('authPassword').value;
+      
+      if (type === 'signup' && !username) {
+        showAuthMsg("Username required for signup");
+        return;
+      }
       if (!email || !pwd) { showAuthMsg("Email & password required"); return; }
+      
       try {
         if (type === 'signup') {
+          // Check if username already exists
+          const usernameQuery = query(collection(db, "users"), where("username", "==", username));
+          const existingUsername = await getDocs(usernameQuery);
+          if (!existingUsername.empty) {
+            showAuthMsg("Username already taken. Choose another.");
+            return;
+          }
+          
           const cred = await createUserWithEmailAndPassword(auth, email, pwd);
-          const displayName = email.split('@')[0];
-          // Check if user already exists to prevent duplicate
-          const userQuery = query(collection(db, "users"), where("email", "==", cred.user.email));
-          const existing = await getDocs(userQuery);
-          if (existing.empty) {
-            await setDoc(doc(db, "users", cred.user.uid), { email: cred.user.email, name: displayName, uid: cred.user.uid, createdAt: Date.now() });
+          // Update display name in Auth
+          await updateProfile(cred.user, { displayName: username });
+          
+          // Check if email already exists in Firestore
+          const emailQuery = query(collection(db, "users"), where("email", "==", cred.user.email));
+          const existingEmail = await getDocs(emailQuery);
+          if (existingEmail.empty) {
+            await setDoc(doc(db, "users", cred.user.uid), { 
+              email: cred.user.email, 
+              username: username,
+              name: username,
+              uid: cred.user.uid, 
+              createdAt: Date.now()
+            });
           }
           showAuthMsg("✅ Signup success! Logging in...");
           await signInWithEmailAndPassword(auth, email, pwd);
@@ -541,25 +645,107 @@
       if (el) el.innerText = msg;
     }
     
-    // Get or create user doc (no duplicates)
     async function ensureUniqueUserDoc(user) {
       const userQuery = query(collection(db, "users"), where("email", "==", user.email));
       const existing = await getDocs(userQuery);
       if (existing.empty) {
-        await setDoc(doc(db, "users", user.uid), { email: user.email, name: user.email.split('@')[0], uid: user.uid });
+        const username = user.displayName || user.email.split('@')[0];
+        await setDoc(doc(db, "users", user.uid), { 
+          email: user.email, 
+          username: username,
+          name: username,
+          uid: user.uid 
+        });
       }
     }
     
-    // Load chats with last message, unread count, sorted by latest message
+    // Search user by username (not email)
+    async function searchUserByUsername() {
+      return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'search-modal';
+        modal.innerHTML = `
+          <div class="search-modal-content">
+            <h3>🔍 Find User by Username</h3>
+            <input type="text" id="searchUsernameInput" placeholder="Enter username (e.g., john_doe)" autocomplete="off">
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+              <button id="searchCancelBtn">Cancel</button>
+              <button id="searchConfirmBtn" style="background: #22c55e;">Search</button>
+            </div>
+            <div id="searchResultMsg" style="margin-top: 12px; font-size: 0.8rem; color: #f97316;"></div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        
+        const searchInput = modal.querySelector('#searchUsernameInput');
+        const confirmBtn = modal.querySelector('#searchConfirmBtn');
+        const cancelBtn = modal.querySelector('#searchCancelBtn');
+        const resultMsg = modal.querySelector('#searchResultMsg');
+        
+        searchInput.focus();
+        
+        const doSearch = async () => {
+          const username = searchInput.value.trim().toLowerCase();
+          if (!username) {
+            resultMsg.innerText = "Please enter a username";
+            return;
+          }
+          if (username === currentUserName) {
+            resultMsg.innerText = "You cannot chat with yourself";
+            return;
+          }
+          
+          const usersRef = collection(db, "users");
+          const q = query(usersRef, where("username", "==", username));
+          const snap = await getDocs(q);
+          
+          if (snap.empty) {
+            resultMsg.innerText = "❌ No user found with that username";
+            return;
+          }
+          
+          const userData = snap.docs[0].data();
+          modal.remove();
+          resolve({ email: userData.email, name: userData.username || userData.name });
+        };
+        
+        confirmBtn.onclick = doSearch;
+        cancelBtn.onclick = () => { modal.remove(); resolve(null); };
+        searchInput.onkeypress = (e) => { if (e.key === 'Enter') doSearch(); };
+      });
+    }
+    
+    async function startNewChatWithUsername() {
+      const result = await searchUserByUsername();
+      if (!result) return;
+      
+      const { email, name } = result;
+      
+      // Check if chat already exists
+      const userChatsRef = collection(db, "user_chats");
+      const checkQuery = query(userChatsRef, where("participants", "array-contains", currentUserEmail));
+      const existing = await getDocs(checkQuery);
+      let exists = false;
+      existing.forEach(d => { if (d.data().participants.includes(email)) exists = true; });
+      
+      if (!exists) {
+        await addDoc(collection(db, "user_chats"), {
+          participants: [currentUserEmail, email],
+          otherName: name,
+          otherUsername: name,
+          createdAt: Date.now()
+        });
+      }
+      await loadChatsList();
+      selectChatUser(email, name);
+    }
+    
     async function loadChatsList() {
       if (!db || !currentUserEmail) return;
       const container = document.getElementById('usersListContainer');
       if (!container) return;
       
-      // Find all users that current user has chatted with
-      const allChats = new Map(); // email -> { name, lastMsg, lastTimestamp, unread }
-      
-      // Get all chat rooms where current user participated
+      const allChats = new Map();
       const chatRoomsQuery = query(collection(db, "user_chats"), where("participants", "array-contains", currentUserEmail));
       const chatRoomsSnap = await getDocs(chatRoomsQuery);
       
@@ -571,7 +757,6 @@
         const otherName = data.otherName || otherEmail.split('@')[0];
         const chatId = [currentUserEmail, otherEmail].sort().join('_');
         
-        // Get last message
         const messagesRef = collection(db, "chats", chatId, "messages");
         const lastMsgQuery = query(messagesRef, orderBy("timestamp", "desc"), limit(1));
         const lastMsgSnap = await getDocs(lastMsgQuery);
@@ -580,11 +765,10 @@
         let lastTimestamp = 0;
         if (!lastMsgSnap.empty) {
           const msg = lastMsgSnap.docs[0].data();
-          lastMessage = msg.text.length > 30 ? msg.text.substring(0, 30) + "..." : msg.text;
+          lastMessage = msg.text.length > 35 ? msg.text.substring(0, 35) + "..." : msg.text;
           lastTimestamp = msg.timestamp || 0;
         }
         
-        // Count unread messages (messages sent by other user, not seen)
         const unreadQuery = query(messagesRef, where("sender", "==", otherEmail), where("seen", "==", false));
         const unreadSnap = await getDocs(unreadQuery);
         const unreadCount = unreadSnap.size;
@@ -598,12 +782,11 @@
         });
       }
       
-      // Convert to array and sort by lastTimestamp DESC
       chatsData = Array.from(allChats.values());
       chatsData.sort((a, b) => (b.lastTimestamp || 0) - (a.lastTimestamp || 0));
       
       if (chatsData.length === 0) {
-        container.innerHTML = `<div style="color:#aaa; text-align:center; padding:20px;">✨ No chats yet<br>🔍 Start a conversation by searching users</div>`;
+        container.innerHTML = `<div style="color:#aaa; text-align:center; padding:20px;">✨ No chats yet<br>🔍 Click "New Chat" to find friends by username</div>`;
         return;
       }
       
@@ -621,7 +804,6 @@
           ${chat.unreadCount > 0 && selectedUserEmail !== chat.email ? '<div class="unread-dot"></div>' : ''}
         `;
         div.addEventListener('click', () => {
-          // Mark as read when clicking
           markMessagesAsRead(chat.email);
           selectChatUser(chat.email, chat.name);
         });
@@ -629,7 +811,6 @@
       });
     }
     
-    // Mark all messages from a user as seen
     async function markMessagesAsRead(otherEmail) {
       if (!currentUserEmail || !otherEmail) return;
       const chatId = [currentUserEmail, otherEmail].sort().join('_');
@@ -641,23 +822,14 @@
         batch.update(docSnap.ref, { seen: true });
       });
       await batch.commit();
-      // Refresh list to remove green dot
       loadChatsList();
     }
     
-    // Listen for real-time updates to chats (new messages)
     function listenForChatUpdates() {
       if (!db || !currentUserEmail) return;
-      // Instead of complex listener, we'll reload chats periodically and on new messages
-      // Also listen to all chat rooms for new messages
       const chatRoomsQuery = query(collection(db, "user_chats"), where("participants", "array-contains", currentUserEmail));
-      const unsubscribeRooms = onSnapshot(chatRoomsQuery, () => {
-        loadChatsList();
-      });
-      return unsubscribeRooms;
+      return onSnapshot(chatRoomsQuery, () => { loadChatsList(); });
     }
-    
-    let unsubscribeRoomsListener = null;
     
     function selectChatUser(email, name) {
       if (selectedUserEmail === email) return;
@@ -667,9 +839,9 @@
       selectedUserEmail = email;
       selectedUserName = name;
       
-      loadChatsList(); // refresh active highlight and remove dot
+      loadChatsList();
       document.getElementById('chatTargetName').innerText = name;
-      document.getElementById('chatStatus').innerHTML = '🟢 Online • real-time';
+      document.getElementById('chatStatus').innerHTML = '🟢 Connected • real-time';
       document.getElementById('messageInputField').disabled = false;
       loadMessagesRealtime();
       listenTypingIndicator();
@@ -694,7 +866,6 @@
       input.value = '';
       scrollChatBottom();
       
-      // Ensure chat is registered in user_chats
       const userChatsRef = collection(db, "user_chats");
       const checkQuery = query(userChatsRef, where("participants", "array-contains", currentUserEmail));
       const snap = await getDocs(checkQuery);
@@ -707,7 +878,7 @@
           createdAt: Date.now()
         });
       }
-      loadChatsList(); // refresh order after sending
+      loadChatsList();
     }
     
     function loadMessagesRealtime() {
@@ -735,7 +906,6 @@
             } else {
               if (!msg.seen) {
                 updateDoc(docSnap.ref, { seen: true }).catch(console.warn);
-                // Refresh chat list to update unread count
                 loadChatsList();
               }
             }
@@ -743,9 +913,48 @@
           });
         }
         scrollChatBottom();
-        // Refresh chat list to update last message and order
         loadChatsList();
       });
+    }
+    
+    // Emoji Picker Setup
+    function setupEmojiPicker() {
+      const emojiBtn = document.getElementById('emojiBtn');
+      const pickerContainer = document.getElementById('emojiPickerContainer');
+      const messageInput = document.getElementById('messageInputField');
+      
+      if (!emojiBtn || !pickerContainer) return;
+      
+      emojiBtn.addEventListener('click', () => {
+        pickerContainer.classList.toggle('show');
+      });
+      
+      // Close picker when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!pickerContainer.contains(e.target) && e.target !== emojiBtn) {
+          pickerContainer.classList.remove('show');
+        }
+      });
+      
+      // Wait for Emoji Mart to load
+      const waitForEmojiMart = setInterval(() => {
+        if (window.emojiMart) {
+          clearInterval(waitForEmojiMart);
+          const { Picker } = window.emojiMart;
+          const picker = new Picker({
+            onEmojiSelect: (emoji) => {
+              messageInput.value += emoji.native;
+              messageInput.focus();
+              pickerContainer.classList.remove('show');
+            },
+            theme: 'dark',
+            set: 'twitter',
+            showPreview: false,
+            showSkinTones: true
+          });
+          pickerContainer.appendChild(picker);
+        }
+      }, 100);
     }
     
     function handleTyping() {
@@ -777,7 +986,7 @@
         });
         const typingDiv = document.getElementById('typingIndicatorArea');
         if (typingDiv) {
-          typingDiv.innerHTML = isTyping ? `<span class="material-symbols-rounded" style="font-size:16px;">pending</span> ${selectedUserName || 'Someone'} is typing...` : '';
+          typingDiv.innerHTML = isTyping ? `✍️ ${selectedUserName} is typing...` : '';
         }
       });
     }
@@ -791,44 +1000,8 @@
     
     function escapeHtml(str) { 
       if(!str) return '';
-      return str.replace(/[&<>]/g, function(m) {
-        if(m === '&') return '&amp;';
-        if(m === '<') return '&lt;';
-        if(m === '>') return '&gt;';
-        return m;
-      });
+      return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
     }
-    
-    // Search user by email to start new chat
-    window.searchAndAddUser = async function() {
-      const email = prompt("Enter user email to start chat:");
-      if (!email || email === currentUserEmail) return alert("Invalid email");
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("email", "==", email));
-      const snap = await getDocs(q);
-      if (snap.empty) {
-        alert("User not found. Make sure they have signed up.");
-        return;
-      }
-      const userData = snap.docs[0].data();
-      const name = userData.name || email.split('@')[0];
-      
-      // Check if chat already exists
-      const userChatsRef = collection(db, "user_chats");
-      const checkQuery = query(userChatsRef, where("participants", "array-contains", currentUserEmail));
-      const existing = await getDocs(checkQuery);
-      let exists = false;
-      existing.forEach(d => { if (d.data().participants.includes(email)) exists = true; });
-      if (!exists) {
-        await addDoc(collection(db, "user_chats"), {
-          participants: [currentUserEmail, email],
-          otherName: name,
-          createdAt: Date.now()
-        });
-      }
-      await loadChatsList();
-      selectChatUser(email, name);
-    };
     
     function renderApp() {
       root.innerHTML = `
@@ -837,9 +1010,9 @@
             <div class="sidebar-modern">
               <div class="sidebar-header">
                 <h2>Chatter</h2>
-                <div class="user-badge"><span class="material-symbols-rounded" style="font-size:18px;">account_circle</span> <span id="currentUserEmailDisplay">${currentUserEmail || 'user'}</span></div>
-                <button id="logoutBtn" style="background: none; border:1px solid rgba(255,255,255,0.3); margin-top:12px; padding:6px 14px; border-radius:40px; color:#ddd; cursor:pointer; font-size:12px;">🚪 Logout</button>
-                <button id="addChatBtn" style="background: #3b82f6; border:none; margin-top:12px; padding:8px; border-radius:40px; color:white; cursor:pointer; font-size:12px; width:100%;">➕ New Chat</button>
+                <div class="user-badge"><span class="material-symbols-rounded" style="font-size:18px;">account_circle</span> @${escapeHtml(currentUserName || currentUserEmail?.split('@')[0])}</div>
+                <button id="logoutBtn" style="background: none; border:1px solid rgba(255,255,255,0.3); margin-top:12px; padding:6px 14px; border-radius:40px; color:#ddd; cursor:pointer; font-size:12px; width:100%;">🚪 Logout</button>
+                <button id="addChatBtn" style="background: #3b82f6; border:none; margin-top:12px; padding:8px; border-radius:40px; color:white; cursor:pointer; font-size:12px; width:100%;">➕ New Chat (by username)</button>
               </div>
               <div class="users-list" id="usersListContainer">
                 <div style="color:#aaa; text-align:center; padding:20px;">Loading chats...</div>
@@ -855,9 +1028,11 @@
               </div>
               <div id="typingIndicatorArea" class="typing-status"></div>
               <div class="input-bar">
+                <button id="emojiBtn" class="emoji-btn"><span class="material-symbols-rounded">sentiment_satisfied</span></button>
                 <input type="text" id="messageInputField" class="input-message" placeholder="Type a message..." autocomplete="off" disabled>
                 <button id="sendMsgBtn" class="send-btn"><span class="material-symbols-rounded">send</span></button>
               </div>
+              <div id="emojiPickerContainer" class="emoji-picker-container"></div>
             </div>
           </div>
         </div>
@@ -865,7 +1040,7 @@
       
       document.getElementById('logoutBtn')?.addEventListener('click', async () => { await signOut(auth); });
       document.getElementById('sendMsgBtn')?.addEventListener('click', () => sendMessageHandler());
-      document.getElementById('addChatBtn')?.addEventListener('click', () => window.searchAndAddUser());
+      document.getElementById('addChatBtn')?.addEventListener('click', () => startNewChatWithUsername());
       const inputField = document.getElementById('messageInputField');
       inputField?.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessageHandler(); });
       inputField?.addEventListener('input', () => handleTyping());
@@ -873,13 +1048,14 @@
       loadChatsList();
       if (unsubscribeRoomsListener) unsubscribeRoomsListener();
       unsubscribeRoomsListener = listenForChatUpdates();
+      setupEmojiPicker();
     }
     
-    // Auth state observer
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUserEmail = user.email;
         currentUserId = user.uid;
+        currentUserName = user.displayName || user.email.split('@')[0];
         await ensureUniqueUserDoc(user);
         renderApp();
       } else {
@@ -894,7 +1070,7 @@
     
     if (!firebaseReady) {
       renderAuthPage();
-      showAuthMsg("⚠️ Please configure Firebase credentials (apiKey, authDomain, projectId) inside script.");
+      showAuthMsg("⚠️ Please configure Firebase credentials");
     } else {
       renderAuthPage();
     }
