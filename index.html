@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>GlanceChat — Modern Messenger</title>
-  <!-- Google Fonts & Simple Icons (Material Symbols) -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0,1" />
   <style>
@@ -21,10 +20,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s ease;
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+      height: 100%;
     }
 
-    /* ----- GLASS AUTH PANEL (ULTRA SMOOTH) ----- */
+    /* GLASS AUTH PANEL */
     .auth-container {
       width: 100%;
       max-width: 460px;
@@ -39,7 +41,6 @@
       border: 1px solid rgba(255, 255, 255, 0.2);
       box-shadow: 0 25px 45px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(255, 255, 255, 0.1) inset;
       padding: 2.2rem 2rem;
-      transition: transform 0.2s;
     }
 
     .glass-auth h2 {
@@ -49,7 +50,6 @@
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      letter-spacing: -0.3px;
       margin-bottom: 0.5rem;
     }
 
@@ -57,11 +57,6 @@
       color: #94a3b8;
       font-size: 0.9rem;
       margin-bottom: 2rem;
-      font-weight: 400;
-    }
-
-    .input-group {
-      margin-bottom: 1.2rem;
     }
 
     .glass-input {
@@ -72,10 +67,8 @@
       border-radius: 1.5rem;
       font-size: 1rem;
       color: white;
-      font-weight: 500;
-      transition: all 0.25s;
       outline: none;
-      backdrop-filter: blur(4px);
+      transition: all 0.25s;
     }
 
     .glass-input:focus {
@@ -86,7 +79,6 @@
 
     .glass-input::placeholder {
       color: #7f8ea3;
-      font-weight: 400;
     }
 
     .btn-group {
@@ -100,7 +92,6 @@
       padding: 12px 0;
       border-radius: 2rem;
       font-weight: 600;
-      font-size: 0.95rem;
       border: none;
       cursor: pointer;
       transition: all 0.2s ease;
@@ -115,61 +106,86 @@
 
     .btn-primary:hover {
       transform: translateY(-2px);
-      filter: brightness(1.05);
-      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
     }
 
     .btn-secondary {
       background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(4px);
       color: #e2e8f0;
       border: 1px solid rgba(255,255,255,0.2);
     }
 
-    .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: translateY(-2px);
-    }
-
-    /* ----- MAIN APP (GLASS UI) ----- */
+    /* MAIN APP WRAPPER */
     .app-container {
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-    }
-
-    .glass-app {
-      width: 1300px;
-      max-width: 98vw;
-      height: 90vh;
+      width: 100%;
+      height: 100%;
       background: rgba(15, 23, 42, 0.6);
       backdrop-filter: blur(16px);
-      border-radius: 2rem;
-      border: 1px solid rgba(255, 255, 255, 0.2);
       display: flex;
+      flex-direction: column;
       overflow: hidden;
-      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.4);
-      transition: all 0.2s;
     }
 
-    /* Sidebar modern */
+    /* DESKTOP LAYOUT (>=768px) */
+    .glass-app {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* SIDEBAR (Contacts List) */
     .sidebar-modern {
-      width: 300px;
-      background: rgba(0, 0, 0, 0.35);
-      backdrop-filter: blur(8px);
+      width: 100%;
+      max-width: 380px;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(12px);
       border-right: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
       flex-direction: column;
-      padding: 20px 0;
+      transition: transform 0.3s ease;
+    }
+
+    /* Mobile: sidebar hidden when chat open, slide from left */
+    @media (max-width: 767px) {
+      .sidebar-modern {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 85%;
+        max-width: 320px;
+        height: 100%;
+        z-index: 20;
+        transform: translateX(-100%);
+        transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        box-shadow: 2px 0 20px rgba(0,0,0,0.3);
+      }
+      .sidebar-modern.open {
+        transform: translateX(0);
+      }
+      .chat-master {
+        width: 100%;
+      }
+      .mobile-back-btn {
+        display: flex !important;
+      }
+      .desktop-only {
+        display: none;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .mobile-back-btn {
+        display: none !important;
+      }
+      .sidebar-modern {
+        transform: translateX(0) !important;
+        position: relative;
+      }
     }
 
     .sidebar-header {
-      padding: 0 20px 20px 20px;
+      padding: 20px 20px 16px 20px;
       border-bottom: 1px solid rgba(255,255,255,0.1);
-      margin-bottom: 18px;
     }
 
     .sidebar-header h2 {
@@ -183,106 +199,222 @@
     }
 
     .user-badge {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: #a0c4ff;
-      margin-top: 6px;
+      margin-top: 8px;
       display: flex;
       align-items: center;
       gap: 6px;
+      word-break: break-all;
     }
 
-    .users-list {
+    .logout-mobile {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 5px 12px;
+      border-radius: 40px;
+      color: #ddd;
+      cursor: pointer;
+      font-size: 11px;
+      margin-top: 8px;
+    }
+
+    /* Search Section */
+    .search-section {
+      padding: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .search-box {
+      display: flex;
+      gap: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 2rem;
+      padding: 4px 4px 4px 16px;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .search-box input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: white;
+      padding: 10px 0;
+      outline: none;
+      font-size: 0.85rem;
+    }
+
+    .search-box input::placeholder {
+      color: #7f8ea3;
+    }
+
+    .search-btn {
+      background: #3b82f6;
+      border: none;
+      border-radius: 2rem;
+      padding: 6px 16px;
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.8rem;
+    }
+
+    .search-result {
+      margin-top: 12px;
+      background: rgba(59, 130, 246, 0.2);
+      border-radius: 1rem;
+      padding: 10px 12px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .search-result.show {
+      display: flex;
+    }
+
+    .add-chat-btn {
+      background: #22c55e;
+      border: none;
+      border-radius: 1.5rem;
+      padding: 5px 12px;
+      color: white;
+      cursor: pointer;
+      font-size: 0.75rem;
+    }
+
+    /* Chats List */
+    .chats-list {
       flex: 1;
       overflow-y: auto;
-      padding: 0 12px;
+      padding: 12px;
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
 
-    .user-card {
+    .chat-item {
       background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(2px);
-      padding: 14px 16px;
       border-radius: 1.2rem;
+      padding: 12px 14px;
       cursor: pointer;
       transition: all 0.2s;
       border: 1px solid transparent;
-      color: #f0f3fa;
-      font-weight: 500;
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
-    .user-card:hover {
+    .chat-item:hover {
       background: rgba(59, 130, 246, 0.25);
       border-color: rgba(59, 130, 246, 0.6);
-      transform: translateX(4px);
     }
 
-    .user-card.active-chat {
+    .chat-item.active-chat {
       background: linear-gradient(95deg, #2563eb40, #3b82f620);
       border-left: 3px solid #3b82f6;
     }
 
-    .avatar-placeholder {
-      width: 38px;
-      height: 38px;
+    .chat-avatar {
+      width: 48px;
+      height: 48px;
       background: linear-gradient(145deg, #3b82f6, #1e40af);
-      border-radius: 32px;
+      border-radius: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: bold;
+      font-size: 1.2rem;
       text-transform: uppercase;
       color: white;
     }
 
-    /* Chat section */
+    .chat-info {
+      flex: 1;
+    }
+
+    .chat-name {
+      font-weight: 600;
+      font-size: 1rem;
+      color: white;
+    }
+
+    .chat-preview {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    .empty-chats {
+      text-align: center;
+      color: #7f8ea3;
+      padding: 30px 20px;
+      font-size: 0.85rem;
+    }
+
+    /* CHAT AREA (Right Panel) */
     .chat-master {
       flex: 1;
       display: flex;
       flex-direction: column;
+      background: rgba(0, 0, 0, 0.2);
+      height: 100%;
       overflow: hidden;
     }
 
     .chat-header-gloss {
-      padding: 18px 24px;
-      background: rgba(0, 0, 0, 0.3);
+      padding: 16px 20px;
+      background: rgba(0, 0, 0, 0.4);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
-    .chat-header-gloss h3 {
+    .mobile-back-btn {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: white;
+    }
+
+    .chat-header-text {
+      flex: 1;
+    }
+
+    .chat-header-text h3 {
       color: white;
       font-weight: 600;
-      font-size: 1.35rem;
+      font-size: 1.2rem;
     }
 
-    .chat-header-gloss p {
+    .chat-header-text p {
       color: #8ca3cf;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
     }
 
     .messages-area {
       flex: 1;
       overflow-y: auto;
-      padding: 24px 20px;
+      padding: 20px 16px;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      scroll-behavior: smooth;
     }
 
     .bubble {
-      max-width: 70%;
-      padding: 10px 16px;
-      border-radius: 24px;
-      font-size: 0.95rem;
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 22px;
+      font-size: 0.9rem;
       line-height: 1.4;
-      position: relative;
-      animation: fadeInMsg 0.2s ease;
       word-wrap: break-word;
     }
 
@@ -290,47 +422,38 @@
       background: linear-gradient(115deg, #3b82f6, #2563eb);
       color: white;
       align-self: flex-end;
-      border-bottom-right-radius: 6px;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+      border-bottom-right-radius: 5px;
     }
 
     .bubble-other {
       background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(8px);
       color: #f1f5f9;
       align-self: flex-start;
-      border-bottom-left-radius: 6px;
-      border: 0.5px solid rgba(255,255,255,0.2);
+      border-bottom-left-radius: 5px;
     }
 
     .seen-indicator {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       margin-top: 4px;
       text-align: right;
-      letter-spacing: 0.5px;
       opacity: 0.8;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 4px;
     }
 
     .typing-status {
-      padding: 6px 24px;
-      font-size: 0.75rem;
+      padding: 4px 20px;
+      font-size: 0.7rem;
       color: #a5b9e8;
       font-style: italic;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      min-height: 28px;
     }
 
     .input-bar {
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(0, 0, 0, 0.5);
       backdrop-filter: blur(12px);
-      padding: 16px 20px;
+      padding: 12px 16px;
       display: flex;
-      gap: 12px;
+      gap: 10px;
       border-top: 1px solid rgba(255,255,255,0.1);
     }
 
@@ -338,100 +461,53 @@
       flex: 1;
       background: rgba(255,255,255,0.1);
       border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 2.5rem;
-      padding: 12px 20px;
+      border-radius: 2rem;
+      padding: 12px 18px;
       color: white;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       outline: none;
-      transition: all 0.2s;
-    }
-
-    .input-message:focus {
-      background: rgba(255,255,255,0.18);
-      border-color: #3b82f6;
     }
 
     .send-btn {
       background: #3b82f6;
       border: none;
-      width: 48px;
-      height: 48px;
-      border-radius: 40px;
+      width: 46px;
+      height: 46px;
+      border-radius: 46px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: 0.2s;
       color: white;
     }
 
-    .send-btn:hover {
-      background: #2563eb;
-      transform: scale(1.02);
-    }
-
-    /* scroll */
-    ::-webkit-scrollbar {
-      width: 5px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: rgba(255,255,255,0.05);
-      border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: #3b82f680;
-      border-radius: 10px;
-    }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+    ::-webkit-scrollbar-thumb { background: #3b82f680; border-radius: 10px; }
 
     @keyframes fadeSlideUp {
-      0% { opacity: 0; transform: translateY(18px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes fadeInMsg {
-      from { opacity: 0; transform: translateY(8px);}
-      to { opacity: 1; transform: translateY(0);}
-    }
-
-    .empty-chat {
-      text-align: center;
-      color: #8da3cf;
-      margin-top: 40px;
-      font-weight: 400;
-    }
-
-    @media (max-width: 700px) {
-      .sidebar-modern { width: 240px; }
-      .bubble { max-width: 85%; }
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <!-- DYNAMIC RENDER BY JS -->
   <div id="root"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, collection, doc, getDocs, addDoc, query, orderBy, onSnapshot, updateDoc, setDoc, getDoc, deleteDoc, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, doc, getDocs, addDoc, query, orderBy, onSnapshot, updateDoc, setDoc, getDoc, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // 🔥 FIREBASE CONFIG (place your real config below)
+    // 🔥 REPLACE WITH YOUR FIREBASE CONFIG
     const firebaseConfig = {
       apiKey: "AIzaSyBXKKQZTCJpurD9oVkdCvFElAgXwaL2hsc",
       authDomain: "chat-app-665ba.firebaseapp.com",
       projectId: "chat-app-665ba",
-      storageBucket: "your-project.appspot.com",
-      messagingSenderId: "123456789",
-      appId: "1:123456789:web:abc123"
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
-    
-    // ----------------- IMPORTANT -----------------
-    // FOR DEMO PURPOSE, you MUST replace with YOUR firebase config.
-    // This code is fully functional once valid config added.
-    // To avoid errors, we check if config seems valid, else show warning.
-    // -------------------------------------------------
     
     let app, auth, db;
     let firebaseReady = false;
@@ -442,16 +518,16 @@
       firebaseReady = true;
     } catch(e) { console.warn(e); }
     
-    // State
     let currentUserEmail = null;
+    let currentUserId = null;
     let selectedUserEmail = null;
     let selectedUserName = null;
-    let usersCache = []; // { email, name }
-    let typingTimeout = null;
+    let myChats = [];
     let unsubscribeMessages = null;
     let unsubscribeTyping = null;
+    let typingTimeout = null;
+    let isMobile = window.innerWidth <= 767;
     
-    // DOM elements root
     const root = document.getElementById('root');
     
     function renderAuthPage() {
@@ -459,9 +535,9 @@
         <div class="auth-container">
           <div class="glass-auth">
             <h2>✨ GlanceChat</h2>
-            <div class="welcome-sub">Ultra-smooth • Glassmorphic • Real-time</div>
-            <div class="input-group"><input type="email" id="authEmail" class="glass-input" placeholder="Email address" autocomplete="email"></div>
-            <div class="input-group"><input type="password" id="authPassword" class="glass-input" placeholder="Password" autocomplete="current-password"></div>
+            <div class="welcome-sub">Glass UI • Mobile Ready • Real-time</div>
+            <div class="input-group"><input type="email" id="authEmail" class="glass-input" placeholder="Email address"></div>
+            <div class="input-group"><input type="password" id="authPassword" class="glass-input" placeholder="Password"></div>
             <div class="btn-group">
               <button class="btn-primary" id="loginBtn">Login →</button>
               <button class="btn-secondary" id="signupBtn">Sign up</button>
@@ -475,17 +551,16 @@
     }
     
     async function handleAuth(type) {
-      if (!firebaseReady) { showAuthMsg("⚠️ Firebase config missing — add your own keys in code."); return; }
+      if (!firebaseReady) { showAuthMsg("⚠️ Configure Firebase first"); return; }
       const email = document.getElementById('authEmail').value.trim();
       const pwd = document.getElementById('authPassword').value;
       if (!email || !pwd) { showAuthMsg("Email & password required"); return; }
       try {
         if (type === 'signup') {
           const cred = await createUserWithEmailAndPassword(auth, email, pwd);
-          // store user display name (use email prefix)
           const displayName = email.split('@')[0];
           await setDoc(doc(db, "users", cred.user.uid), { email: cred.user.email, name: displayName, uid: cred.user.uid });
-          showAuthMsg("✅ Signup success! Logging in...");
+          showAuthMsg("✅ Signup success!");
           await signInWithEmailAndPassword(auth, email, pwd);
         } else {
           await signInWithEmailAndPassword(auth, email, pwd);
@@ -495,117 +570,132 @@
       }
     }
     
-    function showAuthMsg(msg) {
-      const el = document.getElementById('authMessage');
-      if (el) el.innerText = msg;
+    function showAuthMsg(msg) { const el = document.getElementById('authMessage'); if (el) el.innerText = msg; }
+    
+    async function ensureUserDoc(user) {
+      const userRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userRef);
+      if (!snap.exists()) {
+        await setDoc(userRef, { email: user.email, name: user.email.split('@')[0], uid: user.uid });
+      }
     }
     
-    // ---------- APP RENDER ----------
-    function renderApp() {
-      root.innerHTML = `
-        <div class="app-container">
-          <div class="glass-app">
-            <div class="sidebar-modern">
-              <div class="sidebar-header">
-                <h2>Chatter</h2>
-                <div class="user-badge"><span class="material-symbols-rounded" style="font-size:18px;">account_circle</span> <span id="currentUserEmailDisplay">${currentUserEmail || 'user'}</span></div>
-                <button id="logoutBtn" style="background: none; border:1px solid rgba(255,255,255,0.3); margin-top:12px; padding:6px 14px; border-radius:40px; color:#ddd; cursor:pointer; font-size:12px;">🚪 Logout</button>
-              </div>
-              <div class="users-list" id="usersListContainer">
-                <div style="color:#aaa; text-align:center; padding:20px;">Loading contacts...</div>
-              </div>
-            </div>
-            <div class="chat-master">
-              <div class="chat-header-gloss" id="chatHeaderDynamic">
-                <h3 id="chatTargetName">✨ Select a friend</h3>
-                <p id="chatStatus">Tap user to start conversation</p>
-              </div>
-              <div class="messages-area" id="chatMessagesPanel">
-                <div class="empty-chat">💬 No conversation yet</div>
-              </div>
-              <div id="typingIndicatorArea" class="typing-status"></div>
-              <div class="input-bar">
-                <input type="text" id="messageInputField" class="input-message" placeholder="Type a message..." autocomplete="off">
-                <button id="sendMsgBtn" class="send-btn"><span class="material-symbols-rounded">send</span></button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-      
-      document.getElementById('logoutBtn')?.addEventListener('click', async () => { await signOut(auth); });
-      document.getElementById('sendMsgBtn')?.addEventListener('click', () => sendMessageHandler());
-      const inputField = document.getElementById('messageInputField');
-      inputField?.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessageHandler(); });
-      inputField?.addEventListener('input', () => handleTyping());
-      
-      loadUsersList();
-    }
-    
-    // load users from firestore "users" collection
-    async function loadUsersList() {
+    async function loadMyChats() {
       if (!db || !currentUserEmail) return;
-      const container = document.getElementById('usersListContainer');
-      try {
-        const usersSnap = await getDocs(collection(db, "users"));
-        const list = [];
-        usersSnap.forEach(docSnap => {
-          const data = docSnap.data();
-          if (data.email && data.email !== currentUserEmail) {
-            list.push({ email: data.email, name: data.name || data.email.split('@')[0] });
-          }
-        });
-        usersCache = list;
-        if (list.length === 0) {
-          container.innerHTML = `<div style="color:#aaa; text-align:center; padding:20px;">✨ No other users yet</div>`;
-          return;
+      const container = document.getElementById('chatsListContainer');
+      if (!container) return;
+      const userChatsRef = collection(db, "user_chats");
+      const q = query(userChatsRef, where("participants", "array-contains", currentUserEmail));
+      const snapshot = await getDocs(q);
+      const chatMap = new Map();
+      for (const docSnap of snapshot.docs) {
+        const data = docSnap.data();
+        const otherEmail = data.participants.find(e => e !== currentUserEmail);
+        if (otherEmail) {
+          chatMap.set(otherEmail, { email: otherEmail, name: data.otherName || otherEmail.split('@')[0] });
         }
-        container.innerHTML = '';
-        list.forEach(user => {
-          const div = document.createElement('div');
-          div.className = `user-card ${selectedUserEmail === user.email ? 'active-chat' : ''}`;
-          const initial = user.name.charAt(0).toUpperCase();
-          div.innerHTML = `<div class="avatar-placeholder">${initial}</div><span>${user.name}</span>`;
-          div.addEventListener('click', () => selectChatUser(user.email, user.name));
-          container.appendChild(div);
-        });
-      } catch(e) { console.error(e); container.innerHTML = `<div style="color:#f88;">Error loading users</div>`; }
+      }
+      myChats = Array.from(chatMap.values());
+      if (myChats.length === 0) {
+        container.innerHTML = `<div class="empty-chats">✨ No conversations yet<br>🔍 Search for a user to start</div>`;
+        return;
+      }
+      container.innerHTML = '';
+      myChats.forEach(chat => {
+        const div = document.createElement('div');
+        div.className = `chat-item ${selectedUserEmail === chat.email ? 'active-chat' : ''}`;
+        const initial = chat.name.charAt(0).toUpperCase();
+        div.innerHTML = `
+          <div class="chat-avatar">${initial}</div>
+          <div class="chat-info">
+            <div class="chat-name">${escapeHtml(chat.name)}</div>
+            <div class="chat-preview">Tap to chat</div>
+          </div>
+        `;
+        div.addEventListener('click', () => selectChatUser(chat.email, chat.name));
+        container.appendChild(div);
+      });
+    }
+    
+    async function searchUser() {
+      const searchInput = document.getElementById('searchEmailInput');
+      const queryEmail = searchInput.value.trim().toLowerCase();
+      if (!queryEmail) return;
+      if (queryEmail === currentUserEmail) { alert("You cannot chat with yourself"); return; }
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("email", "==", queryEmail));
+      const snapshot = await getDocs(q);
+      const resultDiv = document.getElementById('searchResult');
+      const resultInfo = document.getElementById('searchUserInfo');
+      const addBtn = document.getElementById('addChatBtn');
+      if (snapshot.empty) {
+        resultInfo.innerText = `❌ No user: ${queryEmail}`;
+        addBtn.style.display = 'none';
+        resultDiv.classList.add('show');
+        return;
+      }
+      const userData = snapshot.docs[0].data();
+      resultInfo.innerText = `👤 ${userData.name || userData.email}`;
+      addBtn.style.display = 'block';
+      addBtn.onclick = () => startNewChat(userData.email, userData.name || userData.email.split('@')[0]);
+      resultDiv.classList.add('show');
+    }
+    
+    async function startNewChat(email, name) {
+      if (email === currentUserEmail) return;
+      const userChatsRef = collection(db, "user_chats");
+      const existingQuery = query(userChatsRef, where("participants", "array-contains", currentUserEmail));
+      const existingSnap = await getDocs(existingQuery);
+      let alreadyExists = false;
+      existingSnap.forEach(docSnap => { if (docSnap.data().participants.includes(email)) alreadyExists = true; });
+      if (!alreadyExists) {
+        await addDoc(collection(db, "user_chats"), { participants: [currentUserEmail, email], otherName: name, createdAt: Date.now() });
+      }
+      document.getElementById('searchEmailInput').value = '';
+      document.getElementById('searchResult').classList.remove('show');
+      await loadMyChats();
+      selectChatUser(email, name);
     }
     
     function selectChatUser(email, name) {
       if (selectedUserEmail === email) return;
-      // cleanup previous listeners
       if (unsubscribeMessages) unsubscribeMessages();
       if (unsubscribeTyping) unsubscribeTyping();
       selectedUserEmail = email;
       selectedUserName = name;
-      // update active style
-      loadUsersList(); // re-render active highlight
+      loadMyChats();
       document.getElementById('chatTargetName').innerText = name;
-      document.getElementById('chatStatus').innerHTML = '🟢 Online • end-to-end glam';
+      document.getElementById('chatStatus').innerHTML = '🟢 Connected • real-time';
+      document.getElementById('messageInputField').disabled = false;
       loadMessagesRealtime();
       listenTypingIndicator();
+      // On mobile, close sidebar and show chat panel fully
+      if (window.innerWidth <= 767) {
+        document.querySelector('.sidebar-modern')?.classList.remove('open');
+      }
     }
     
-    function getChatRoomId(userA, userB) {
-      return [userA, userB].sort().join('_');
-    }
+    function getChatRoomId(a,b) { return [a,b].sort().join('_'); }
     
     async function sendMessageHandler() {
       const input = document.getElementById('messageInputField');
       const text = input.value.trim();
       if (!text || !selectedUserEmail || !currentUserEmail) return;
       const chatRoomId = getChatRoomId(currentUserEmail, selectedUserEmail);
-      const messagesRef = collection(db, "chats", chatRoomId, "messages");
-      await addDoc(messagesRef, {
-        text: text,
-        sender: currentUserEmail,
-        seen: false,
-        timestamp: Date.now()
+      await addDoc(collection(db, "chats", chatRoomId, "messages"), {
+        text, sender: currentUserEmail, seen: false, timestamp: Date.now()
       });
       input.value = '';
-      // scroll to bottom after send
       scrollChatBottom();
+      const userChatsRef = collection(db, "user_chats");
+      const checkQuery = query(userChatsRef, where("participants", "array-contains", currentUserEmail));
+      const snap = await getDocs(checkQuery);
+      let found = false;
+      snap.forEach(d => { if (d.data().participants.includes(selectedUserEmail)) found = true; });
+      if (!found) {
+        await addDoc(collection(db, "user_chats"), { participants: [currentUserEmail, selectedUserEmail], otherName: selectedUserName });
+        loadMyChats();
+      }
     }
     
     function loadMessagesRealtime() {
@@ -617,27 +707,23 @@
         if (!msgPanel) return;
         msgPanel.innerHTML = '';
         if (snapshot.empty) {
-          msgPanel.innerHTML = '<div class="empty-chat">✨ Say hi! Start the conversation ✨</div>';
+          msgPanel.innerHTML = '<div style="text-align:center;color:#8da3cf;margin-top:40px;">✨ Send a message ✨</div>';
         } else {
           snapshot.forEach(docSnap => {
             const msg = docSnap.data();
             const isMine = msg.sender === currentUserEmail;
-            const bubbleDiv = document.createElement('div');
-            bubbleDiv.className = `bubble ${isMine ? 'bubble-mine' : 'bubble-other'}`;
-            bubbleDiv.innerHTML = `<div>${escapeHtml(msg.text)}</div>`;
+            const bubble = document.createElement('div');
+            bubble.className = `bubble ${isMine ? 'bubble-mine' : 'bubble-other'}`;
+            bubble.innerHTML = `<div>${escapeHtml(msg.text)}</div>`;
             if (isMine) {
-              const seenMark = msg.seen ? '✔✔ Seen' : '✔ Delivered';
               const seenSpan = document.createElement('div');
               seenSpan.className = 'seen-indicator';
               seenSpan.innerHTML = msg.seen ? '✔✔ Seen' : '✔ Sent';
-              bubbleDiv.appendChild(seenSpan);
-            } else {
-              if (!msg.seen) {
-                // mark as seen instantly
-                updateDoc(docSnap.ref, { seen: true }).catch(console.warn);
-              }
+              bubble.appendChild(seenSpan);
+            } else if (!msg.seen) {
+              updateDoc(docSnap.ref, { seen: true }).catch(()=>{});
             }
-            msgPanel.appendChild(bubbleDiv);
+            msgPanel.appendChild(bubble);
           });
         }
         scrollChatBottom();
@@ -647,17 +733,10 @@
     function handleTyping() {
       if (!selectedUserEmail || !currentUserEmail) return;
       const chatRoomId = getChatRoomId(currentUserEmail, selectedUserEmail);
-      const typingRef = collection(db, "typing_indicators");
       const docId = `${chatRoomId}_${currentUserEmail}`;
-      setDoc(doc(db, "typing_indicators", docId), {
-        user: currentUserEmail,
-        chatId: chatRoomId,
-        timestamp: Date.now()
-      }).catch(console.warn);
+      setDoc(doc(db, "typing_indicators", docId), { user: currentUserEmail, chatId: chatRoomId, timestamp: Date.now() }).catch(()=>{});
       if (typingTimeout) clearTimeout(typingTimeout);
-      typingTimeout = setTimeout(async () => {
-        await deleteDoc(doc(db, "typing_indicators", docId)).catch(()=>{});
-      }, 1500);
+      typingTimeout = setTimeout(() => deleteDoc(doc(db, "typing_indicators", docId)).catch(()=>{}), 1500);
     }
     
     function listenTypingIndicator() {
@@ -665,72 +744,99 @@
       const chatRoomId = getChatRoomId(currentUserEmail, selectedUserEmail);
       const typingQuery = query(collection(db, "typing_indicators"), where("chatId", "==", chatRoomId));
       unsubscribeTyping = onSnapshot(typingQuery, (snap) => {
-        let isTyping = false;
-        snap.forEach(docSnap => {
-          const data = docSnap.data();
-          if (data.user !== currentUserEmail && (Date.now() - data.timestamp) < 2000) {
-            isTyping = true;
-          }
-        });
-        const typingDiv = document.getElementById('typingIndicatorArea');
-        if (typingDiv) {
-          typingDiv.innerHTML = isTyping ? `<span class="material-symbols-rounded" style="font-size:16px;">pending</span> ${selectedUserName || 'Someone'} is typing...` : '';
-        }
+        let typing = false;
+        snap.forEach(d => { if (d.data().user !== currentUserEmail && Date.now() - d.data().timestamp < 2000) typing = true; });
+        const div = document.getElementById('typingIndicatorArea');
+        if (div) div.innerHTML = typing ? `✍️ ${selectedUserName} is typing...` : '';
       });
     }
     
-    function scrollChatBottom() {
-      setTimeout(() => {
-        const panel = document.getElementById('chatMessagesPanel');
-        if (panel) panel.scrollTop = panel.scrollHeight;
-      }, 50);
+    function scrollChatBottom() { setTimeout(() => { const p = document.getElementById('chatMessagesPanel'); if(p) p.scrollTop = p.scrollHeight; }, 50); }
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+    
+    function toggleSidebar(open) {
+      const sidebar = document.querySelector('.sidebar-modern');
+      if (sidebar) {
+        if (open) sidebar.classList.add('open');
+        else sidebar.classList.remove('open');
+      }
     }
     
-    function escapeHtml(str) { 
-      if(!str) return '';
-      return str.replace(/[&<>]/g, function(m) {
-        if(m === '&') return '&amp;';
-        if(m === '<') return '&lt;';
-        if(m === '>') return '&gt;';
-        return m;
-      });
+    function renderApp() {
+      root.innerHTML = `
+        <div class="app-container">
+          <div class="glass-app">
+            <div class="sidebar-modern" id="mobileSidebar">
+              <div class="sidebar-header">
+                <h2>Chatter</h2>
+                <div class="user-badge"><span class="material-symbols-rounded" style="font-size:18px;">account_circle</span> ${escapeHtml(currentUserEmail)}</div>
+                <button id="logoutBtnSidebar" class="logout-mobile">🚪 Logout</button>
+              </div>
+              <div class="search-section">
+                <div class="search-box">
+                  <input type="text" id="searchEmailInput" placeholder="🔍 Search by email...">
+                  <button id="searchUserBtn" class="search-btn">Find</button>
+                </div>
+                <div id="searchResult" class="search-result">
+                  <span id="searchUserInfo"></span>
+                  <button id="addChatBtn" class="add-chat-btn">+ Chat</button>
+                </div>
+              </div>
+              <div class="chats-list" id="chatsListContainer"><div class="empty-chats">✨ Loading chats...</div></div>
+            </div>
+            <div class="chat-master">
+              <div class="chat-header-gloss">
+                <button id="mobileMenuBtn" class="mobile-back-btn"><span class="material-symbols-rounded">menu</span></button>
+                <div class="chat-header-text">
+                  <h3 id="chatTargetName">✨ Select a chat</h3>
+                  <p id="chatStatus">No conversation</p>
+                </div>
+                <button id="logoutBtnDesktop" class="desktop-only" style="background:none; border:1px solid rgba(255,255,255,0.3); padding:6px 12px; border-radius:40px; color:#ddd; cursor:pointer;">Logout</button>
+              </div>
+              <div class="messages-area" id="chatMessagesPanel"><div style="text-align:center;color:#8da3cf;margin-top:40px;">💬 Choose a chat</div></div>
+              <div id="typingIndicatorArea" class="typing-status"></div>
+              <div class="input-bar">
+                <input type="text" id="messageInputField" class="input-message" placeholder="Type a message..." disabled>
+                <button id="sendMsgBtn" class="send-btn"><span class="material-symbols-rounded">send</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('logoutBtnSidebar')?.addEventListener('click', () => signOut(auth));
+      document.getElementById('logoutBtnDesktop')?.addEventListener('click', () => signOut(auth));
+      document.getElementById('sendMsgBtn')?.addEventListener('click', sendMessageHandler);
+      document.getElementById('searchUserBtn')?.addEventListener('click', searchUser);
+      document.getElementById('mobileMenuBtn')?.addEventListener('click', () => toggleSidebar(true));
+      const inputMsg = document.getElementById('messageInputField');
+      inputMsg?.addEventListener('keypress', e => { if(e.key === 'Enter') sendMessageHandler(); });
+      inputMsg?.addEventListener('input', handleTyping);
+      loadMyChats();
+      if (window.innerWidth <= 767) toggleSidebar(false);
+      else toggleSidebar(true);
     }
     
-    // Auth state observer
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 767) toggleSidebar(true);
+      else if (!selectedUserEmail) toggleSidebar(false);
+    });
+    
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUserEmail = user.email;
-        // ensure user doc exists
-        if (db) {
-          const userRef = doc(db, "users", user.uid);
-          const snap = await getDoc(userRef);
-          if (!snap.exists()) {
-            await setDoc(userRef, { email: user.email, name: user.email.split('@')[0], uid: user.uid });
-          }
-        }
+        currentUserId = user.uid;
+        await ensureUserDoc(user);
         renderApp();
-        // after render load chats data
-        setTimeout(() => {
-          if (selectedUserEmail === null && usersCache.length) {
-            // optional
-          }
-        }, 300);
       } else {
         if (unsubscribeMessages) unsubscribeMessages();
         if (unsubscribeTyping) unsubscribeTyping();
-        currentUserEmail = null;
-        selectedUserEmail = null;
+        currentUserEmail = null; selectedUserEmail = null;
         renderAuthPage();
       }
     });
     
-    // initial load
-    if (!firebaseReady) {
-      renderAuthPage();
-      showAuthMsg("⚠️ Please configure Firebase credentials (apiKey, authDomain, projectId) inside script.");
-    } else {
-      renderAuthPage();
-    }
+    if (!firebaseReady) { renderAuthPage(); showAuthMsg("⚠️ Configure Firebase credentials"); }
+    else { renderAuthPage(); }
   </script>
 </body>
 </html>
