@@ -213,6 +213,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      position: relative;
     }
 
     .user-card:hover {
@@ -226,6 +227,25 @@
       border-left: 3px solid #3b82f6;
     }
 
+    /* Unread green dot */
+    .unread-dot {
+      width: 10px;
+      height: 10px;
+      background-color: #22c55e;
+      border-radius: 50%;
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      box-shadow: 0 0 6px #22c55e;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.5; transform: translateY(-50%) scale(0.8); }
+      100% { opacity: 1; transform: translateY(-50%) scale(1.2); }
+    }
+
     .avatar-placeholder {
       width: 38px;
       height: 38px;
@@ -237,6 +257,28 @@
       font-weight: bold;
       text-transform: uppercase;
       color: white;
+      flex-shrink: 0;
+    }
+
+    .user-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .user-name {
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .last-msg-preview {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;
     }
 
     /* Chat section */
@@ -405,33 +447,27 @@
     @media (max-width: 700px) {
       .sidebar-modern { width: 240px; }
       .bubble { max-width: 85%; }
+      .last-msg-preview { max-width: 120px; }
     }
   </style>
 </head>
 <body>
-  <!-- DYNAMIC RENDER BY JS -->
   <div id="root"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, collection, doc, getDocs, addDoc, query, orderBy, onSnapshot, updateDoc, setDoc, getDoc, deleteDoc, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, doc, getDocs, addDoc, query, orderBy, onSnapshot, updateDoc, setDoc, getDoc, deleteDoc, where, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // 🔥 FIREBASE CONFIG (place your real config below)
+    // 🔥 FIREBASE CONFIG (Replace with your actual config)
     const firebaseConfig = {
       apiKey: "AIzaSyBXKKQZTCJpurD9oVkdCvFElAgXwaL2hsc",
       authDomain: "chat-app-665ba.firebaseapp.com",
       projectId: "chat-app-665ba",
-      storageBucket: "your-project.appspot.com",
-      messagingSenderId: "123456789",
-      appId: "1:123456789:web:abc123"
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
-    
-    // ----------------- IMPORTANT -----------------
-    // FOR DEMO PURPOSE, you MUST replace with YOUR firebase config.
-    // This code is fully functional once valid config added.
-    // To avoid errors, we check if config seems valid, else show warning.
-    // -------------------------------------------------
     
     let app, auth, db;
     let firebaseReady = false;
@@ -444,14 +480,15 @@
     
     // State
     let currentUserEmail = null;
+    let currentUserId = null;
     let selectedUserEmail = null;
     let selectedUserName = null;
-    let usersCache = []; // { email, name }
+    let chatsData = []; // { email, name, lastMessage, lastTimestamp, unreadCount }
     let typingTimeout = null;
     let unsubscribeMessages = null;
     let unsubscribeTyping = null;
+    let chatListeners = new Map(); // track per-chat unread listeners
     
-    // DOM elements root
     const root = document.getElementById('root');
     
     function renderAuthPage() {
@@ -482,9 +519,13 @@
       try {
         if (type === 'signup') {
           const cred = await createUserWithEmailAndPassword(auth, email, pwd);
-          // store user display name (use email prefix)
           const displayName = email.split('@')[0];
-          await setDoc(doc(db, "users", cred.user.uid), { email: cred.user.email, name: displayName, uid: cred.user.uid });
+          // Check if user already exists to prevent duplicate
+          const userQuery = query(collection(db, "users"), where("email", "==", cred.user.email));
+          const existing = await getDocs(userQuery);
+          if (existing.empty) {
+            await setDoc(doc(db, "users", cred.user.uid), { email: cred.user.email, name: displayName, uid: cred.user.uid, createdAt: Date.now() });
+          }
           showAuthMsg("✅ Signup success! Logging in...");
           await signInWithEmailAndPassword(auth, email, pwd);
         } else {
@@ -500,89 +541,136 @@
       if (el) el.innerText = msg;
     }
     
-    // ---------- APP RENDER ----------
-    function renderApp() {
-      root.innerHTML = `
-        <div class="app-container">
-          <div class="glass-app">
-            <div class="sidebar-modern">
-              <div class="sidebar-header">
-                <h2>Chatter</h2>
-                <div class="user-badge"><span class="material-symbols-rounded" style="font-size:18px;">account_circle</span> <span id="currentUserEmailDisplay">${currentUserEmail || 'user'}</span></div>
-                <button id="logoutBtn" style="background: none; border:1px solid rgba(255,255,255,0.3); margin-top:12px; padding:6px 14px; border-radius:40px; color:#ddd; cursor:pointer; font-size:12px;">🚪 Logout</button>
-              </div>
-              <div class="users-list" id="usersListContainer">
-                <div style="color:#aaa; text-align:center; padding:20px;">Loading contacts...</div>
-              </div>
-            </div>
-            <div class="chat-master">
-              <div class="chat-header-gloss" id="chatHeaderDynamic">
-                <h3 id="chatTargetName">✨ Select a friend</h3>
-                <p id="chatStatus">Tap user to start conversation</p>
-              </div>
-              <div class="messages-area" id="chatMessagesPanel">
-                <div class="empty-chat">💬 No conversation yet</div>
-              </div>
-              <div id="typingIndicatorArea" class="typing-status"></div>
-              <div class="input-bar">
-                <input type="text" id="messageInputField" class="input-message" placeholder="Type a message..." autocomplete="off">
-                <button id="sendMsgBtn" class="send-btn"><span class="material-symbols-rounded">send</span></button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-      
-      document.getElementById('logoutBtn')?.addEventListener('click', async () => { await signOut(auth); });
-      document.getElementById('sendMsgBtn')?.addEventListener('click', () => sendMessageHandler());
-      const inputField = document.getElementById('messageInputField');
-      inputField?.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessageHandler(); });
-      inputField?.addEventListener('input', () => handleTyping());
-      
-      loadUsersList();
+    // Get or create user doc (no duplicates)
+    async function ensureUniqueUserDoc(user) {
+      const userQuery = query(collection(db, "users"), where("email", "==", user.email));
+      const existing = await getDocs(userQuery);
+      if (existing.empty) {
+        await setDoc(doc(db, "users", user.uid), { email: user.email, name: user.email.split('@')[0], uid: user.uid });
+      }
     }
     
-    // load users from firestore "users" collection
-    async function loadUsersList() {
+    // Load chats with last message, unread count, sorted by latest message
+    async function loadChatsList() {
       if (!db || !currentUserEmail) return;
       const container = document.getElementById('usersListContainer');
-      try {
-        const usersSnap = await getDocs(collection(db, "users"));
-        const list = [];
-        usersSnap.forEach(docSnap => {
-          const data = docSnap.data();
-          if (data.email && data.email !== currentUserEmail) {
-            list.push({ email: data.email, name: data.name || data.email.split('@')[0] });
-          }
-        });
-        usersCache = list;
-        if (list.length === 0) {
-          container.innerHTML = `<div style="color:#aaa; text-align:center; padding:20px;">✨ No other users yet</div>`;
-          return;
+      if (!container) return;
+      
+      // Find all users that current user has chatted with
+      const allChats = new Map(); // email -> { name, lastMsg, lastTimestamp, unread }
+      
+      // Get all chat rooms where current user participated
+      const chatRoomsQuery = query(collection(db, "user_chats"), where("participants", "array-contains", currentUserEmail));
+      const chatRoomsSnap = await getDocs(chatRoomsQuery);
+      
+      for (const roomDoc of chatRoomsSnap.docs) {
+        const data = roomDoc.data();
+        const otherEmail = data.participants.find(e => e !== currentUserEmail);
+        if (!otherEmail) continue;
+        
+        const otherName = data.otherName || otherEmail.split('@')[0];
+        const chatId = [currentUserEmail, otherEmail].sort().join('_');
+        
+        // Get last message
+        const messagesRef = collection(db, "chats", chatId, "messages");
+        const lastMsgQuery = query(messagesRef, orderBy("timestamp", "desc"), limit(1));
+        const lastMsgSnap = await getDocs(lastMsgQuery);
+        
+        let lastMessage = "No messages yet";
+        let lastTimestamp = 0;
+        if (!lastMsgSnap.empty) {
+          const msg = lastMsgSnap.docs[0].data();
+          lastMessage = msg.text.length > 30 ? msg.text.substring(0, 30) + "..." : msg.text;
+          lastTimestamp = msg.timestamp || 0;
         }
-        container.innerHTML = '';
-        list.forEach(user => {
-          const div = document.createElement('div');
-          div.className = `user-card ${selectedUserEmail === user.email ? 'active-chat' : ''}`;
-          const initial = user.name.charAt(0).toUpperCase();
-          div.innerHTML = `<div class="avatar-placeholder">${initial}</div><span>${user.name}</span>`;
-          div.addEventListener('click', () => selectChatUser(user.email, user.name));
-          container.appendChild(div);
+        
+        // Count unread messages (messages sent by other user, not seen)
+        const unreadQuery = query(messagesRef, where("sender", "==", otherEmail), where("seen", "==", false));
+        const unreadSnap = await getDocs(unreadQuery);
+        const unreadCount = unreadSnap.size;
+        
+        allChats.set(otherEmail, {
+          email: otherEmail,
+          name: otherName,
+          lastMessage: lastMessage,
+          lastTimestamp: lastTimestamp,
+          unreadCount: unreadCount
         });
-      } catch(e) { console.error(e); container.innerHTML = `<div style="color:#f88;">Error loading users</div>`; }
+      }
+      
+      // Convert to array and sort by lastTimestamp DESC
+      chatsData = Array.from(allChats.values());
+      chatsData.sort((a, b) => (b.lastTimestamp || 0) - (a.lastTimestamp || 0));
+      
+      if (chatsData.length === 0) {
+        container.innerHTML = `<div style="color:#aaa; text-align:center; padding:20px;">✨ No chats yet<br>🔍 Start a conversation by searching users</div>`;
+        return;
+      }
+      
+      container.innerHTML = '';
+      chatsData.forEach(chat => {
+        const div = document.createElement('div');
+        div.className = `user-card ${selectedUserEmail === chat.email ? 'active-chat' : ''}`;
+        const initial = chat.name.charAt(0).toUpperCase();
+        div.innerHTML = `
+          <div class="avatar-placeholder">${initial}</div>
+          <div class="user-info">
+            <div class="user-name">${escapeHtml(chat.name)}</div>
+            <div class="last-msg-preview">${escapeHtml(chat.lastMessage)}</div>
+          </div>
+          ${chat.unreadCount > 0 && selectedUserEmail !== chat.email ? '<div class="unread-dot"></div>' : ''}
+        `;
+        div.addEventListener('click', () => {
+          // Mark as read when clicking
+          markMessagesAsRead(chat.email);
+          selectChatUser(chat.email, chat.name);
+        });
+        container.appendChild(div);
+      });
     }
+    
+    // Mark all messages from a user as seen
+    async function markMessagesAsRead(otherEmail) {
+      if (!currentUserEmail || !otherEmail) return;
+      const chatId = [currentUserEmail, otherEmail].sort().join('_');
+      const messagesRef = collection(db, "chats", chatId, "messages");
+      const unreadQuery = query(messagesRef, where("sender", "==", otherEmail), where("seen", "==", false));
+      const unreadSnap = await getDocs(unreadQuery);
+      const batch = writeBatch(db);
+      unreadSnap.forEach(docSnap => {
+        batch.update(docSnap.ref, { seen: true });
+      });
+      await batch.commit();
+      // Refresh list to remove green dot
+      loadChatsList();
+    }
+    
+    // Listen for real-time updates to chats (new messages)
+    function listenForChatUpdates() {
+      if (!db || !currentUserEmail) return;
+      // Instead of complex listener, we'll reload chats periodically and on new messages
+      // Also listen to all chat rooms for new messages
+      const chatRoomsQuery = query(collection(db, "user_chats"), where("participants", "array-contains", currentUserEmail));
+      const unsubscribeRooms = onSnapshot(chatRoomsQuery, () => {
+        loadChatsList();
+      });
+      return unsubscribeRooms;
+    }
+    
+    let unsubscribeRoomsListener = null;
     
     function selectChatUser(email, name) {
       if (selectedUserEmail === email) return;
-      // cleanup previous listeners
       if (unsubscribeMessages) unsubscribeMessages();
       if (unsubscribeTyping) unsubscribeTyping();
+      
       selectedUserEmail = email;
       selectedUserName = name;
-      // update active style
-      loadUsersList(); // re-render active highlight
+      
+      loadChatsList(); // refresh active highlight and remove dot
       document.getElementById('chatTargetName').innerText = name;
-      document.getElementById('chatStatus').innerHTML = '🟢 Online • end-to-end glam';
+      document.getElementById('chatStatus').innerHTML = '🟢 Online • real-time';
+      document.getElementById('messageInputField').disabled = false;
       loadMessagesRealtime();
       listenTypingIndicator();
     }
@@ -604,8 +692,22 @@
         timestamp: Date.now()
       });
       input.value = '';
-      // scroll to bottom after send
       scrollChatBottom();
+      
+      // Ensure chat is registered in user_chats
+      const userChatsRef = collection(db, "user_chats");
+      const checkQuery = query(userChatsRef, where("participants", "array-contains", currentUserEmail));
+      const snap = await getDocs(checkQuery);
+      let found = false;
+      snap.forEach(d => { if (d.data().participants.includes(selectedUserEmail)) found = true; });
+      if (!found) {
+        await addDoc(collection(db, "user_chats"), {
+          participants: [currentUserEmail, selectedUserEmail],
+          otherName: selectedUserName,
+          createdAt: Date.now()
+        });
+      }
+      loadChatsList(); // refresh order after sending
     }
     
     function loadMessagesRealtime() {
@@ -626,28 +728,29 @@
             bubbleDiv.className = `bubble ${isMine ? 'bubble-mine' : 'bubble-other'}`;
             bubbleDiv.innerHTML = `<div>${escapeHtml(msg.text)}</div>`;
             if (isMine) {
-              const seenMark = msg.seen ? '✔✔ Seen' : '✔ Delivered';
               const seenSpan = document.createElement('div');
               seenSpan.className = 'seen-indicator';
               seenSpan.innerHTML = msg.seen ? '✔✔ Seen' : '✔ Sent';
               bubbleDiv.appendChild(seenSpan);
             } else {
               if (!msg.seen) {
-                // mark as seen instantly
                 updateDoc(docSnap.ref, { seen: true }).catch(console.warn);
+                // Refresh chat list to update unread count
+                loadChatsList();
               }
             }
             msgPanel.appendChild(bubbleDiv);
           });
         }
         scrollChatBottom();
+        // Refresh chat list to update last message and order
+        loadChatsList();
       });
     }
     
     function handleTyping() {
       if (!selectedUserEmail || !currentUserEmail) return;
       const chatRoomId = getChatRoomId(currentUserEmail, selectedUserEmail);
-      const typingRef = collection(db, "typing_indicators");
       const docId = `${chatRoomId}_${currentUserEmail}`;
       setDoc(doc(db, "typing_indicators", docId), {
         user: currentUserEmail,
@@ -696,35 +799,99 @@
       });
     }
     
+    // Search user by email to start new chat
+    window.searchAndAddUser = async function() {
+      const email = prompt("Enter user email to start chat:");
+      if (!email || email === currentUserEmail) return alert("Invalid email");
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("email", "==", email));
+      const snap = await getDocs(q);
+      if (snap.empty) {
+        alert("User not found. Make sure they have signed up.");
+        return;
+      }
+      const userData = snap.docs[0].data();
+      const name = userData.name || email.split('@')[0];
+      
+      // Check if chat already exists
+      const userChatsRef = collection(db, "user_chats");
+      const checkQuery = query(userChatsRef, where("participants", "array-contains", currentUserEmail));
+      const existing = await getDocs(checkQuery);
+      let exists = false;
+      existing.forEach(d => { if (d.data().participants.includes(email)) exists = true; });
+      if (!exists) {
+        await addDoc(collection(db, "user_chats"), {
+          participants: [currentUserEmail, email],
+          otherName: name,
+          createdAt: Date.now()
+        });
+      }
+      await loadChatsList();
+      selectChatUser(email, name);
+    };
+    
+    function renderApp() {
+      root.innerHTML = `
+        <div class="app-container">
+          <div class="glass-app">
+            <div class="sidebar-modern">
+              <div class="sidebar-header">
+                <h2>Chatter</h2>
+                <div class="user-badge"><span class="material-symbols-rounded" style="font-size:18px;">account_circle</span> <span id="currentUserEmailDisplay">${currentUserEmail || 'user'}</span></div>
+                <button id="logoutBtn" style="background: none; border:1px solid rgba(255,255,255,0.3); margin-top:12px; padding:6px 14px; border-radius:40px; color:#ddd; cursor:pointer; font-size:12px;">🚪 Logout</button>
+                <button id="addChatBtn" style="background: #3b82f6; border:none; margin-top:12px; padding:8px; border-radius:40px; color:white; cursor:pointer; font-size:12px; width:100%;">➕ New Chat</button>
+              </div>
+              <div class="users-list" id="usersListContainer">
+                <div style="color:#aaa; text-align:center; padding:20px;">Loading chats...</div>
+              </div>
+            </div>
+            <div class="chat-master">
+              <div class="chat-header-gloss" id="chatHeaderDynamic">
+                <h3 id="chatTargetName">✨ Select a friend</h3>
+                <p id="chatStatus">Tap user to start conversation</p>
+              </div>
+              <div class="messages-area" id="chatMessagesPanel">
+                <div class="empty-chat">💬 No conversation yet</div>
+              </div>
+              <div id="typingIndicatorArea" class="typing-status"></div>
+              <div class="input-bar">
+                <input type="text" id="messageInputField" class="input-message" placeholder="Type a message..." autocomplete="off" disabled>
+                <button id="sendMsgBtn" class="send-btn"><span class="material-symbols-rounded">send</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('logoutBtn')?.addEventListener('click', async () => { await signOut(auth); });
+      document.getElementById('sendMsgBtn')?.addEventListener('click', () => sendMessageHandler());
+      document.getElementById('addChatBtn')?.addEventListener('click', () => window.searchAndAddUser());
+      const inputField = document.getElementById('messageInputField');
+      inputField?.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessageHandler(); });
+      inputField?.addEventListener('input', () => handleTyping());
+      
+      loadChatsList();
+      if (unsubscribeRoomsListener) unsubscribeRoomsListener();
+      unsubscribeRoomsListener = listenForChatUpdates();
+    }
+    
     // Auth state observer
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUserEmail = user.email;
-        // ensure user doc exists
-        if (db) {
-          const userRef = doc(db, "users", user.uid);
-          const snap = await getDoc(userRef);
-          if (!snap.exists()) {
-            await setDoc(userRef, { email: user.email, name: user.email.split('@')[0], uid: user.uid });
-          }
-        }
+        currentUserId = user.uid;
+        await ensureUniqueUserDoc(user);
         renderApp();
-        // after render load chats data
-        setTimeout(() => {
-          if (selectedUserEmail === null && usersCache.length) {
-            // optional
-          }
-        }, 300);
       } else {
         if (unsubscribeMessages) unsubscribeMessages();
         if (unsubscribeTyping) unsubscribeTyping();
+        if (unsubscribeRoomsListener) unsubscribeRoomsListener();
         currentUserEmail = null;
         selectedUserEmail = null;
         renderAuthPage();
       }
     });
     
-    // initial load
     if (!firebaseReady) {
       renderAuthPage();
       showAuthMsg("⚠️ Please configure Firebase credentials (apiKey, authDomain, projectId) inside script.");
